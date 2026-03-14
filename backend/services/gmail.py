@@ -1,20 +1,15 @@
 import os
 import base64
 import json
-import secrets
-import hashlib
 from email.mime.text import MIMEText
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 
-from database import SessionLocal, GmailToken, OAuthState
+from database import SessionLocal, GmailToken
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
-
-# Fallback in-memory store if DB is unavailable
-_pkce_verifier_memory: str | None = None
 
 
 def _check_oauth_config():
@@ -42,51 +37,11 @@ def get_oauth_flow() -> Flow:
     )
 
 
-def _save_pkce_verifier(verifier: str):
-    global _pkce_verifier_memory
-    _pkce_verifier_memory = verifier
-    try:
-        db = SessionLocal()
-        try:
-            record = db.get(OAuthState, "default")
-            if record:
-                record.pkce_verifier = verifier
-            else:
-                record = OAuthState(id="default", pkce_verifier=verifier)
-                db.add(record)
-            db.commit()
-        finally:
-            db.close()
-    except Exception:
-        pass  # Fall back to in-memory
-
-
-def _load_pkce_verifier() -> str | None:
-    try:
-        db = SessionLocal()
-        try:
-            record = db.get(OAuthState, "default")
-            if record and record.pkce_verifier:
-                return record.pkce_verifier
-        finally:
-            db.close()
-    except Exception:
-        pass
-    return _pkce_verifier_memory  # Fall back to in-memory
-
-
 def get_auth_url() -> str:
     flow = get_oauth_flow()
-    verifier = secrets.token_urlsafe(64)
-    _save_pkce_verifier(verifier)
-    code_challenge = base64.urlsafe_b64encode(
-        hashlib.sha256(verifier.encode()).digest()
-    ).rstrip(b"=").decode()
     auth_url, _ = flow.authorization_url(
         prompt="consent",
         access_type="offline",
-        code_challenge=code_challenge,
-        code_challenge_method="S256",
     )
     return auth_url
 
@@ -118,8 +73,7 @@ def _load_token_from_db() -> dict | None:
 
 def exchange_code_for_token(code: str) -> dict:
     flow = get_oauth_flow()
-    verifier = _load_pkce_verifier()
-    flow.fetch_token(code=code, code_verifier=verifier)
+    flow.fetch_token(code=code)
     creds = flow.credentials
     token_data = {
         "token": creds.token,
@@ -153,7 +107,10 @@ def load_credentials() -> Credentials | None:
 
 
 def is_gmail_connected() -> bool:
-    return _load_token_from_db() is not None
+    try:
+        return _load_token_from_db() is not None
+    except Exception:
+        return False
 
 
 def send_email(to: str, subject: str, body: str) -> bool:

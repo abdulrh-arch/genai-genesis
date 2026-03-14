@@ -21,7 +21,10 @@ def gmail_auth():
 @router.get("/auth/gmail/callback")
 def gmail_callback(code: str):
     """Handle OAuth callback, store token, redirect to frontend."""
-    exchange_code_for_token(code)
+    try:
+        exchange_code_for_token(code)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Token exchange failed: {str(e)}")
     return RedirectResponse(f"{FRONTEND_URL}/dashboard?gmail=connected")
 
 
