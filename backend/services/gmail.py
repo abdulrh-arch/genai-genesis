@@ -1,6 +1,8 @@
 import os
 import base64
 import json
+import secrets
+import hashlib
 from email.mime.text import MIMEText
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
@@ -9,6 +11,7 @@ from googleapiclient.discovery import build
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 TOKEN_FILE = "gmail_token.json"
+VERIFIER_FILE = "oauth_verifier.txt"
 
 
 def _check_oauth_config():
@@ -38,13 +41,32 @@ def get_oauth_flow() -> Flow:
 
 def get_auth_url() -> str:
     flow = get_oauth_flow()
-    auth_url, _ = flow.authorization_url(prompt="consent", access_type="offline")
+    # Generate PKCE code verifier and challenge
+    code_verifier = secrets.token_urlsafe(64)
+    code_challenge = base64.urlsafe_b64encode(
+        hashlib.sha256(code_verifier.encode()).digest()
+    ).rstrip(b"=").decode()
+    # Save verifier for use in callback
+    with open(VERIFIER_FILE, "w") as f:
+        f.write(code_verifier)
+    auth_url, _ = flow.authorization_url(
+        prompt="consent",
+        access_type="offline",
+        code_challenge=code_challenge,
+        code_challenge_method="S256",
+    )
     return auth_url
 
 
 def exchange_code_for_token(code: str) -> dict:
     flow = get_oauth_flow()
-    flow.fetch_token(code=code)
+    # Read saved PKCE verifier
+    code_verifier = None
+    if os.path.exists(VERIFIER_FILE):
+        with open(VERIFIER_FILE) as f:
+            code_verifier = f.read().strip()
+        os.remove(VERIFIER_FILE)
+    flow.fetch_token(code=code, code_verifier=code_verifier)
     creds = flow.credentials
     token_data = {
         "token": creds.token,
