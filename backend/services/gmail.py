@@ -13,6 +13,9 @@ SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 TOKEN_FILE = "gmail_token.json"
 VERIFIER_FILE = "oauth_verifier.txt"
 
+# In-memory store for PKCE verifier (survives within a single process)
+_pkce_verifier: str | None = None
+
 
 def _check_oauth_config():
     if not os.getenv("GOOGLE_CLIENT_ID") or not os.getenv("GOOGLE_CLIENT_SECRET"):
@@ -40,15 +43,13 @@ def get_oauth_flow() -> Flow:
 
 
 def get_auth_url() -> str:
+    global _pkce_verifier
     flow = get_oauth_flow()
     # Generate PKCE code verifier and challenge
-    code_verifier = secrets.token_urlsafe(64)
+    _pkce_verifier = secrets.token_urlsafe(64)
     code_challenge = base64.urlsafe_b64encode(
-        hashlib.sha256(code_verifier.encode()).digest()
+        hashlib.sha256(_pkce_verifier.encode()).digest()
     ).rstrip(b"=").decode()
-    # Save verifier for use in callback
-    with open(VERIFIER_FILE, "w") as f:
-        f.write(code_verifier)
     auth_url, _ = flow.authorization_url(
         prompt="consent",
         access_type="offline",
@@ -59,14 +60,10 @@ def get_auth_url() -> str:
 
 
 def exchange_code_for_token(code: str) -> dict:
+    global _pkce_verifier
     flow = get_oauth_flow()
-    # Read saved PKCE verifier
-    code_verifier = None
-    if os.path.exists(VERIFIER_FILE):
-        with open(VERIFIER_FILE) as f:
-            code_verifier = f.read().strip()
-        os.remove(VERIFIER_FILE)
-    flow.fetch_token(code=code, code_verifier=code_verifier)
+    flow.fetch_token(code=code, code_verifier=_pkce_verifier)
+    _pkce_verifier = None
     creds = flow.credentials
     token_data = {
         "token": creds.token,
