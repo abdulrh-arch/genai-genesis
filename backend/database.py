@@ -21,6 +21,14 @@ class GmailToken(Base):
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
+class OAuthState(Base):
+    __tablename__ = "oauth_state"
+
+    id = Column(String, primary_key=True, default="default")
+    pkce_verifier = Column(Text, nullable=True)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
 class EmailRecord(Base):
     __tablename__ = "emails"
 

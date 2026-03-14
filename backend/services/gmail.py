@@ -9,12 +9,9 @@ from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 
-from database import SessionLocal, GmailToken
+from database import SessionLocal, GmailToken, OAuthState
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
-
-# In-memory store for PKCE verifier (survives within a single process)
-_pkce_verifier: str | None = None
 
 
 def _check_oauth_config():
@@ -42,12 +39,35 @@ def get_oauth_flow() -> Flow:
     )
 
 
+def _save_pkce_verifier(verifier: str):
+    db = SessionLocal()
+    try:
+        record = db.get(OAuthState, "default")
+        if record:
+            record.pkce_verifier = verifier
+        else:
+            record = OAuthState(id="default", pkce_verifier=verifier)
+            db.add(record)
+        db.commit()
+    finally:
+        db.close()
+
+
+def _load_pkce_verifier() -> str | None:
+    db = SessionLocal()
+    try:
+        record = db.get(OAuthState, "default")
+        return record.pkce_verifier if record else None
+    finally:
+        db.close()
+
+
 def get_auth_url() -> str:
-    global _pkce_verifier
     flow = get_oauth_flow()
-    _pkce_verifier = secrets.token_urlsafe(64)
+    verifier = secrets.token_urlsafe(64)
+    _save_pkce_verifier(verifier)
     code_challenge = base64.urlsafe_b64encode(
-        hashlib.sha256(_pkce_verifier.encode()).digest()
+        hashlib.sha256(verifier.encode()).digest()
     ).rstrip(b"=").decode()
     auth_url, _ = flow.authorization_url(
         prompt="consent",
@@ -84,10 +104,9 @@ def _load_token_from_db() -> dict | None:
 
 
 def exchange_code_for_token(code: str) -> dict:
-    global _pkce_verifier
     flow = get_oauth_flow()
-    flow.fetch_token(code=code, code_verifier=_pkce_verifier)
-    _pkce_verifier = None
+    verifier = _load_pkce_verifier()
+    flow.fetch_token(code=code, code_verifier=verifier)
     creds = flow.credentials
     token_data = {
         "token": creds.token,
