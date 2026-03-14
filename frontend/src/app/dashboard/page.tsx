@@ -2,15 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Mail, ArrowLeft, Sparkles, Globe, AlertCircle } from "lucide-react";
+import { Mail, ArrowLeft, Sparkles, FileText, AlertCircle } from "lucide-react";
 import ResumeUpload from "@/components/ResumeUpload";
 import AgentProgress, { AgentStep } from "@/components/AgentProgress";
 import EmailPreview from "@/components/EmailPreview";
 
 // ----- Types -----
 interface FormData {
-  linkedinUrl: string;
-  portfolioUrl: string;
+  jobDescription: string;
   recipientEmail: string;
   tone: "professional" | "friendly" | "concise";
 }
@@ -21,20 +20,14 @@ type AppState = "idle" | "processing" | "done" | "error";
 const makeInitialSteps = (): AgentStep[] => [
   {
     id: "research",
-    label: "LinkedIn Research Agent",
-    description: "Scrapes recruiter profile and company data",
+    label: "Job Analysis Agent",
+    description: "Extracts company, role, and key requirements from the job description",
     status: "idle",
   },
   {
     id: "draft",
     label: "Email Drafting Agent",
     description: "Writes a personalized email using your resume",
-    status: "idle",
-  },
-  {
-    id: "review",
-    label: "Zero-Hallucination Review Agent",
-    description: "Strips generic phrases & fake attachment refs",
     status: "idle",
   },
   {
@@ -54,8 +47,7 @@ const makeInitialSteps = (): AgentStep[] => [
 // ----- Main page -----
 export default function DashboardPage() {
   const [formData, setFormData] = useState<FormData>({
-    linkedinUrl: "",
-    portfolioUrl: "",
+    jobDescription: "",
     recipientEmail: "",
     tone: "professional",
   });
@@ -71,57 +63,38 @@ export default function DashboardPage() {
   const [isSending, setIsSending] = useState(false);
   const [draftSent, setDraftSent] = useState(false);
 
-  // ---- helpers ----
-  const updateStep = (
-    id: string,
-    patch: Partial<AgentStep>,
-    setter: React.Dispatch<React.SetStateAction<AgentStep[]>>
-  ) => {
-    setter((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
-  };
-
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
   // ---- submit ----
   const handleGenerate = async () => {
-    if (!formData.linkedinUrl || !resumeFile) return;
+    if (!formData.jobDescription.trim() || !resumeFile) return;
 
     setAppState("processing");
     setErrorMsg("");
     setDraftSent(false);
-    const freshSteps = makeInitialSteps();
-    setSteps(freshSteps);
+    setSteps(makeInitialSteps());
 
-    // Helper that updates steps in state
     const update = (id: string, patch: Partial<AgentStep>) =>
       setSteps((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
 
     try {
-      // Step 1: Research
-      update("research", { status: "running", detail: "Fetching LinkedIn data…" });
+      // Step 1: Analyze job description
+      update("research", { status: "running", detail: "Parsing job description…" });
 
       const fd = new FormData();
-      fd.append("linkedin_url", formData.linkedinUrl);
-      fd.append("portfolio_url", formData.portfolioUrl);
+      fd.append("job_description", formData.jobDescription);
       fd.append("recipient_email", formData.recipientEmail);
       fd.append("tone", formData.tone);
       fd.append("resume", resumeFile);
 
-      // Call backend — adjust URL to your Python backend
       const res = await fetch(
         process.env.NEXT_PUBLIC_API_URL
           ? `${process.env.NEXT_PUBLIC_API_URL}/api/generate-email`
           : "http://localhost:8000/api/generate-email",
-        {
-          method: "POST",
-          body: fd,
-        }
+        { method: "POST", body: fd }
       );
 
-      update("research", {
-        status: "done",
-        detail: "Recruiter & company data extracted",
-      });
+      update("research", { status: "done", detail: "Role & company data extracted" });
       await sleep(300);
 
       if (!res.ok) {
@@ -129,34 +102,24 @@ export default function DashboardPage() {
         throw new Error(err.detail || "Backend error");
       }
 
-      // Step 2: Drafting
+      // Step 2: Draft
       update("draft", { status: "running", detail: "Composing personalized email…" });
-      await sleep(200); // Optimistic UI tick
+      await sleep(200);
 
       const data = await res.json();
 
       update("draft", { status: "done", detail: "Draft generated" });
       await sleep(300);
 
-      // Step 3: Review
-      update("review", { status: "running", detail: "Scanning for hallucinations…" });
-      await sleep(500);
-      update("review", {
-        status: "done",
-        detail: data.review_notes || "Passed all checks",
-      });
-      await sleep(300);
-
-      // Step 4: Format
+      // Step 3: Format
       update("format", { status: "running", detail: "Formatting signature…" });
       await sleep(400);
       update("format", { status: "done", detail: "Signature applied" });
       await sleep(300);
 
-      // Step 5: Send to Gmail drafts (triggered by user)
+      // Step 4: Gmail (triggered by user)
       update("send", { status: "idle", detail: "Waiting for your confirmation" });
 
-      // Set email result
       setEmailSubject(data.subject || "");
       setEmailBody(data.body || "");
       setRecipientName(data.recipient_name || "Recruiter");
@@ -176,7 +139,9 @@ export default function DashboardPage() {
   const handleSendToDraft = async () => {
     setIsSending(true);
     setSteps((prev) =>
-      prev.map((s) => (s.id === "send" ? { ...s, status: "running", detail: "Pushing to Gmail…" } : s))
+      prev.map((s) =>
+        s.id === "send" ? { ...s, status: "running", detail: "Pushing to Gmail…" } : s
+      )
     );
 
     try {
@@ -199,9 +164,7 @@ export default function DashboardPage() {
 
       setSteps((prev) =>
         prev.map((s) =>
-          s.id === "send"
-            ? { ...s, status: "done", detail: "Draft saved to Gmail ✓" }
-            : s
+          s.id === "send" ? { ...s, status: "done", detail: "Draft saved to Gmail ✓" } : s
         )
       );
       setDraftSent(true);
@@ -225,17 +188,14 @@ export default function DashboardPage() {
     setSteps(makeInitialSteps());
   };
 
-  const isReady = formData.linkedinUrl.trim() && resumeFile;
+  const isReady = formData.jobDescription.trim() && resumeFile;
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
       {/* Top bar */}
       <header className="border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center gap-4">
-          <Link
-            href="/"
-            className="text-white/25 hover:text-white/60 transition-colors"
-          >
+          <Link href="/" className="text-white/25 hover:text-white/60 transition-colors">
             <ArrowLeft size={18} />
           </Link>
           <div className="flex items-center gap-2">
@@ -252,56 +212,32 @@ export default function DashboardPage() {
         <div className="grid lg:grid-cols-[1fr_380px] gap-8 items-start">
           {/* ---- Left: Form + Output ---- */}
           <div className="space-y-6">
-            {/* Form card */}
             <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-5">
               <div>
                 <h1 className="text-xl font-bold mb-1">Generate Cold Email</h1>
                 <p className="text-sm text-white/40">
-                  Paste a recruiter URL, upload your resume, and let the agents work.
+                  Paste the job description, upload your resume, and let the agents work.
                 </p>
               </div>
 
-              {/* LinkedIn URL */}
+              {/* Job Description */}
               <div>
                 <label className="block text-xs font-medium text-white/40 uppercase tracking-wider mb-2">
-                  Recruiter LinkedIn URL *
+                  Job Description *
                 </label>
                 <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/25">
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                    </svg>
-                  </div>
-                  <input
-                    type="url"
-                    placeholder="https://linkedin.com/in/recruiter-name"
-                    value={formData.linkedinUrl}
-                    onChange={(e) =>
-                      setFormData((f) => ({ ...f, linkedinUrl: e.target.value }))
-                    }
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-indigo-500/50 focus:bg-white/[0.07] transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Portfolio URL */}
-              <div>
-                <label className="block text-xs font-medium text-white/40 uppercase tracking-wider mb-2">
-                  Portfolio / GitHub URL
-                </label>
-                <div className="relative">
-                  <Globe
+                  <FileText
                     size={15}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white/25"
+                    className="absolute left-3 top-3.5 text-white/25"
                   />
-                  <input
-                    type="url"
-                    placeholder="https://github.com/yourname or yourportfolio.com"
-                    value={formData.portfolioUrl}
+                  <textarea
+                    rows={6}
+                    placeholder="Paste the full job description here…"
+                    value={formData.jobDescription}
                     onChange={(e) =>
-                      setFormData((f) => ({ ...f, portfolioUrl: e.target.value }))
+                      setFormData((f) => ({ ...f, jobDescription: e.target.value }))
                     }
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-indigo-500/50 focus:bg-white/[0.07] transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-indigo-500/50 focus:bg-white/[0.07] transition-all resize-none"
                   />
                 </div>
               </div>
@@ -321,10 +257,7 @@ export default function DashboardPage() {
                     placeholder="recruiter@company.com"
                     value={formData.recipientEmail}
                     onChange={(e) =>
-                      setFormData((f) => ({
-                        ...f,
-                        recipientEmail: e.target.value,
-                      }))
+                      setFormData((f) => ({ ...f, recipientEmail: e.target.value }))
                     }
                     className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-indigo-500/50 focus:bg-white/[0.07] transition-all"
                   />
@@ -337,21 +270,19 @@ export default function DashboardPage() {
                   Email Tone
                 </label>
                 <div className="grid grid-cols-3 gap-2">
-                  {(["professional", "friendly", "concise"] as const).map(
-                    (t) => (
-                      <button
-                        key={t}
-                        onClick={() => setFormData((f) => ({ ...f, tone: t }))}
-                        className={`py-2.5 rounded-xl text-sm font-medium capitalize transition-all ${
-                          formData.tone === t
-                            ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/30"
-                            : "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/70"
-                        }`}
-                      >
-                        {t}
-                      </button>
-                    )
-                  )}
+                  {(["professional", "friendly", "concise"] as const).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setFormData((f) => ({ ...f, tone: t }))}
+                      className={`py-2.5 rounded-xl text-sm font-medium capitalize transition-all ${
+                        formData.tone === t
+                          ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/30"
+                          : "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/70"
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -366,10 +297,7 @@ export default function DashboardPage() {
               {/* Error */}
               {errorMsg && (
                 <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-xl p-4">
-                  <AlertCircle
-                    size={16}
-                    className="text-red-400 mt-0.5 shrink-0"
-                  />
+                  <AlertCircle size={16} className="text-red-400 mt-0.5 shrink-0" />
                   <p className="text-sm text-red-300">{errorMsg}</p>
                 </div>
               )}
@@ -413,15 +341,14 @@ export default function DashboardPage() {
           <div className="lg:sticky lg:top-20">
             <AgentProgress steps={steps} />
 
-            {/* Tips */}
             <div className="mt-4 bg-white/[0.02] border border-white/5 rounded-2xl p-5 space-y-3">
               <p className="text-xs font-semibold text-white/30 uppercase tracking-wider">
                 How it works
               </p>
               {[
-                "Agent researches the recruiter's LinkedIn and company",
+                "Analyzes the job description for role, company & requirements",
                 "Drafts email using only real data from your resume",
-                "Review agent removes AI filler & hallucinated claims",
+                "Formats a clean signature from your resume details",
                 "Clean draft lands in your Gmail — you hit send",
               ].map((tip, i) => (
                 <div key={i} className="flex items-start gap-2.5">
