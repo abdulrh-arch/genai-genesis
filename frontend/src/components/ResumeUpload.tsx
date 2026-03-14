@@ -12,18 +12,20 @@ export default function ResumeUpload({ onFileSelect, file }: ResumeUploadProps) 
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     const dropped = e.dataTransfer.files[0];
-    if (dropped && dropped.type === "application/pdf") {
+    if (dropped && dropped.type === "application/pdf" && dropped.size <= MAX_SIZE) {
       onFileSelect(dropped);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
-    if (selected) onFileSelect(selected);
+    if (selected && selected.size <= MAX_SIZE) onFileSelect(selected);
   };
 
   if (file) {

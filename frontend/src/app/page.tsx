@@ -54,12 +54,17 @@ export default function LandingPage() {
             </div>
             <span className="font-semibold text-lg tracking-tight">MailForge</span>
           </div>
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 transition-colors px-4 py-2 rounded-lg text-sm font-medium"
-          >
-            Launch App <ArrowRight size={14} />
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/history" className="text-white/40 hover:text-white/70 transition-colors text-sm">
+              History
+            </Link>
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 transition-colors px-4 py-2 rounded-lg text-sm font-medium"
+            >
+              Launch App <ArrowRight size={14} />
+            </Link>
+          </div>
         </div>
       </nav>
 

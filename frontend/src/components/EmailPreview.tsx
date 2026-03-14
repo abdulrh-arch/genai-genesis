@@ -7,11 +7,11 @@ interface EmailPreviewProps {
   subject: string;
   body: string;
   recipientName: string;
-  recipientEmail?: string;
-  onSendToDraft: () => void;
+  recipientEmail: string;
+  onSend: (subject: string, body: string) => void;
   onRegenerate: () => void;
   isSending: boolean;
-  draftSent: boolean;
+  emailSent: boolean;
 }
 
 export default function EmailPreview({
@@ -19,10 +19,10 @@ export default function EmailPreview({
   body,
   recipientName,
   recipientEmail,
-  onSendToDraft,
+  onSend,
   onRegenerate,
   isSending,
-  draftSent,
+  emailSent,
 }: EmailPreviewProps) {
   const [copied, setCopied] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -108,10 +108,10 @@ export default function EmailPreview({
       {/* Actions */}
       <div className="border-t border-white/8 px-5 py-4 flex items-center gap-3">
         <button
-          onClick={onSendToDraft}
-          disabled={isSending || draftSent}
+          onClick={() => onSend(editedSubject, editedBody)}
+          disabled={isSending || emailSent}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
-            draftSent
+            emailSent
               ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
               : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/30 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
           }`}
@@ -119,17 +119,17 @@ export default function EmailPreview({
           {isSending ? (
             <>
               <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Sending to Gmail…
+              Sending…
             </>
-          ) : draftSent ? (
+          ) : emailSent ? (
             <>
               <Check size={14} />
-              Draft Saved to Gmail
+              Email Sent
             </>
           ) : (
             <>
               <Send size={14} />
-              Save to Gmail Drafts
+              Send Email
             </>
           )}
         </button>
