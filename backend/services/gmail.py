@@ -2,6 +2,7 @@ import os
 import base64
 import json
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import Flow
@@ -132,9 +133,18 @@ def send_email(to: str, subject: str, body: str) -> bool:
 
     service = build("gmail", "v1", credentials=creds)
 
-    message = MIMEText(body, "plain", "utf-8")
+    # Convert plain text to HTML for proper rendering
+    html_body = "".join(
+        f"<p>{para.replace(chr(10), '<br>')}</p>"
+        for para in body.split("\n\n")
+    )
+    html = f'<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#000;">{html_body}</div>'
+
+    message = MIMEMultipart("alternative")
     message["to"] = to
     message["subject"] = subject
+    message.attach(MIMEText(body, "plain", "utf-8"))
+    message.attach(MIMEText(html, "html", "utf-8"))
 
     raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
     service.users().messages().send(userId="me", body={"raw": raw}).execute()
