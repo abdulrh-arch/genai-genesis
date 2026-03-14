@@ -15,7 +15,7 @@ router = APIRouter()
 
 
 def get_llm_client() -> anthropic.Anthropic:
-    return anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+    return anthropic.Anthropic(api_key=os.getenv("LLM_API_KEY"))
 
 
 # ── Generate email ────────────────────────────────────────────────────────────

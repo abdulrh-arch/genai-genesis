@@ -1,5 +1,6 @@
 import anthropic
 import json
+import os
 
 
 def analyze_job(job_description: str, client: anthropic.Anthropic) -> dict:
@@ -8,7 +9,7 @@ def analyze_job(job_description: str, client: anthropic.Anthropic) -> dict:
     Returns: { company, role, requirements, recruiter_name }
     """
     response = client.messages.create(
-        model="claude-opus-4-6",
+        model=os.getenv("LLM_MODEL", "claude-opus-4-6"),
         max_tokens=512,
         messages=[
             {

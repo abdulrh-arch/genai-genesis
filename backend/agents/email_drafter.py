@@ -1,4 +1,5 @@
 import anthropic
+import os
 
 
 TONE_INSTRUCTIONS = {
@@ -22,7 +23,7 @@ def draft_email(
     requirements = ", ".join(job_info.get("requirements", []))
 
     response = client.messages.create(
-        model="claude-opus-4-6",
+        model=os.getenv("LLM_MODEL", "claude-opus-4-6"),
         max_tokens=1024,
         system="""You are an expert cold email writer for tech internship hunters.
 Rules you MUST follow:
