@@ -132,7 +132,7 @@ def send_email(to: str, subject: str, body: str) -> bool:
 
     service = build("gmail", "v1", credentials=creds)
 
-    message = MIMEText(body)
+    message = MIMEText(body, "plain", "utf-8")
     message["to"] = to
     message["subject"] = subject
 
