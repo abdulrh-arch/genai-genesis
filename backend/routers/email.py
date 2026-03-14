@@ -1,5 +1,5 @@
 import os
-import anthropic
+from groq import Groq
 from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -14,8 +14,8 @@ from agents.formatter import format_signature
 router = APIRouter()
 
 
-def get_llm_client() -> anthropic.Anthropic:
-    return anthropic.Anthropic(api_key=os.getenv("LLM_API_KEY"))
+def get_llm_client() -> Groq:
+    return Groq(api_key=os.getenv("LLM_API_KEY"))
 
 
 # ── Generate email ────────────────────────────────────────────────────────────
@@ -80,7 +80,6 @@ async def send_email_endpoint(
         )
     except Exception as e:
         status = "failed"
-        # Still save the record before raising
         record = EmailRecord(
             recipient_email=payload.recipient_email,
             subject=payload.subject,

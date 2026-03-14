@@ -24,7 +24,10 @@ app.add_middleware(
 # Init DB on startup
 @app.on_event("startup")
 def startup():
-    init_db()
+    try:
+        init_db()
+    except Exception as e:
+        print(f"WARNING: Could not connect to database on startup: {e}")
 
 # Routes
 app.include_router(email_router, prefix="/api")

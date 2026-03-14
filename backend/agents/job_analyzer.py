@@ -1,16 +1,15 @@
-import anthropic
-import json
 import os
+import json
+from groq import Groq
 
 
-def analyze_job(job_description: str, client: anthropic.Anthropic) -> dict:
+def analyze_job(job_description: str, client: Groq) -> dict:
     """
     Extract structured info from a job description.
     Returns: { company, role, requirements, recruiter_name }
     """
-    response = client.messages.create(
-        model=os.getenv("LLM_MODEL", "claude-opus-4-6"),
-        max_tokens=512,
+    response = client.chat.completions.create(
+        model=os.getenv("LLM_MODEL", "llama-3.3-70b-versatile"),
         messages=[
             {
                 "role": "user",
@@ -29,7 +28,8 @@ JSON:""",
         ],
     )
 
-    text = response.content[0].text.strip()
+    text = response.choices[0].message.content.strip()
+
     # Strip markdown code fences if present
     if text.startswith("```"):
         text = text.split("```")[1]

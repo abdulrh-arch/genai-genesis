@@ -1,5 +1,5 @@
-import anthropic
 import os
+from groq import Groq
 
 
 TONE_INSTRUCTIONS = {
@@ -9,12 +9,7 @@ TONE_INSTRUCTIONS = {
 }
 
 
-def draft_email(
-    job_info: dict,
-    resume_text: str,
-    tone: str,
-    client: anthropic.Anthropic,
-) -> dict:
+def draft_email(job_info: dict, resume_text: str, tone: str, client: Groq) -> dict:
     """
     Draft a personalized cold email.
     Returns: { subject, body }
@@ -22,10 +17,13 @@ def draft_email(
     tone_desc = TONE_INSTRUCTIONS.get(tone, TONE_INSTRUCTIONS["professional"])
     requirements = ", ".join(job_info.get("requirements", []))
 
-    response = client.messages.create(
-        model=os.getenv("LLM_MODEL", "claude-opus-4-6"),
+    response = client.chat.completions.create(
+        model=os.getenv("LLM_MODEL", "llama-3.3-70b-versatile"),
         max_tokens=1024,
-        system="""You are an expert cold email writer for tech internship hunters.
+        messages=[
+            {
+                "role": "system",
+                "content": """You are an expert cold email writer for tech internship hunters.
 Rules you MUST follow:
 - Only use skills, projects, and experience from the provided resume
 - Never invent credentials, projects, or claims not in the resume
@@ -33,7 +31,7 @@ Rules you MUST follow:
 - Never reference attachments unless the resume explicitly mentions them
 - Write naturally, like a real human
 - Keep it under 200 words""",
-        messages=[
+            },
             {
                 "role": "user",
                 "content": f"""Write a cold email for a tech internship application.
@@ -52,21 +50,18 @@ Return ONLY the email with this exact format:
 SUBJECT: <subject line>
 BODY:
 <email body>""",
-            }
+            },
         ],
     )
 
-    text = response.content[0].text.strip()
+    text = response.choices[0].message.content.strip()
 
     # Parse subject and body
     subject = ""
-    body = ""
-
-    lines = text.split("\n")
-    body_start = False
     body_lines = []
+    body_start = False
 
-    for line in lines:
+    for line in text.split("\n"):
         if line.upper().startswith("SUBJECT:"):
             subject = line.split(":", 1)[1].strip()
         elif line.upper().startswith("BODY:"):
@@ -76,7 +71,6 @@ BODY:
 
     body = "\n".join(body_lines).strip()
 
-    # Fallback if parsing fails
     if not subject or not body:
         subject = f"Internship Application — {job_info.get('role', 'Software Engineering')}"
         body = text
