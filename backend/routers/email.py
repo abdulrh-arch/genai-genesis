@@ -71,7 +71,6 @@ async def send_email_endpoint(
             detail="Gmail not connected. Visit /api/auth/gmail to authorize.",
         )
 
-    status = "sent"
     try:
         send_email(
             to=payload.recipient_email,
@@ -79,26 +78,19 @@ async def send_email_endpoint(
             body=payload.body,
         )
     except Exception as e:
-        status = "failed"
+        raise HTTPException(status_code=500, detail=str(e))
+
+    # Save to DB — best effort, don't fail if DB is down
+    try:
         record = EmailRecord(
             recipient_email=payload.recipient_email,
             subject=payload.subject,
             body=payload.body,
             tone=payload.tone,
-            status=status,
+            status="sent",
         )
         db.add(record)
         db.commit()
-        raise HTTPException(status_code=500, detail=str(e))
-
-    record = EmailRecord(
-        recipient_email=payload.recipient_email,
-        subject=payload.subject,
-        body=payload.body,
-        tone=payload.tone,
-        status=status,
-    )
-    db.add(record)
-    db.commit()
-
-    return {"status": "ok", "id": record.id}
+        return {"status": "ok", "id": record.id}
+    except Exception:
+        return {"status": "ok", "id": None}
