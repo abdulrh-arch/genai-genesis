@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1d31559b-6567-4b8f-a185-c1587761f654" name="Changes" comment="merge with main and add dockerfile" />
+    <list default="true" id="1d31559b-6567-4b8f-a185-c1587761f654" name="Changes" comment="add dockerfile">
+      <change beforePath="$PROJECT_DIR$/backend/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/backend/Dockerfile" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -51,7 +53,8 @@
     "Python.main.executor": "Run",
     "Python.supabase_test.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true"
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main"
   }
 }]]></component>
   <component name="RunManager">
@@ -214,14 +217,31 @@
       <option name="project" value="LOCAL" />
       <updated>1773513571702</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="merge with main and add dockerfile">
+      <option name="closed" value="true" />
+      <created>1773513693421</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1773513693421</updated>
+    </task>
+    <task id="LOCAL-00007" summary="add dockerfile">
+      <option name="closed" value="true" />
+      <created>1773513921809</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1773513921809</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="add database" />
-    <MESSAGE value="merge main" />
     <MESSAGE value="merge with main" />
+    <MESSAGE value="merge main" />
     <MESSAGE value="merge with main and add dockerfile" />
-    <option name="LAST_COMMIT_MESSAGE" value="merge with main and add dockerfile" />
+    <MESSAGE value="add dockerfile" />
+    <option name="LAST_COMMIT_MESSAGE" value="add dockerfile" />
   </component>
 </project>
