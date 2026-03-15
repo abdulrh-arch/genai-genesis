@@ -1,20 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { CheckCircle, AlertTriangle } from "lucide-react";
 
 export default function GmailConnect() {
   const [connected, setConnected] = useState<boolean | null>(null);
   const [configured, setConfigured] = useState<boolean>(true);
-  const searchParams = useSearchParams();
 
   useEffect(() => {
-    // If redirected back from OAuth with ?gmail=connected, mark as connected
-    if (searchParams.get("gmail") === "connected") {
-      setConnected(true);
-      return;
-    }
     checkStatus();
   }, []);
 
