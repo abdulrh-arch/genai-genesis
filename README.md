@@ -9,10 +9,13 @@ How-to-use:
 3. Provide the recruiter's email and their LinkedIn URL.
 4. Choose which tone to generate the email in (Professional, Friendly, Concise).
 5. Drop your resume into the dropbox or upload it from your computer in a PDF format.
-6. Click "Generate Cold Email" button. 
-7. The agent researches the company and drafts a highly personalized, compelling cold email.
-8. You can review the draft and regenerate if you want to change the wording. 
-9. Click to send the email.
+6. Click "Attach resume as pdf" to attach the resume as a pdf to the email. 
+7. Click "Generate Cold Email" button.
+8. The agent researches the company and drafts a highly personalized, compelling cold email.
+9. You can review the draft and edit it to fix any errors.
+11. Regenerate the email if you want to change the wording. 
+12. Click to send the email.
+13. See the history of previous emails sent.
 
 
 Tech Stack: 
