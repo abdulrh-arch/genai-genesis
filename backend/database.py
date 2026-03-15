@@ -7,7 +7,10 @@ import os
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./emails.db")
 
 # PostgreSQL doesn't need check_same_thread
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+else:
+    connect_args = {"connect_timeout": 5}
 engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
