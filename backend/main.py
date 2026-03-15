@@ -9,7 +9,6 @@ from database import init_db
 from routers.email import router as email_router
 from routers.history import router as history_router
 from routers.auth import router as auth_router
-from routers.recruiter import router as recruiter_router
 
 app = FastAPI(title="Cold Email Orchestrator API")
 
@@ -37,7 +36,6 @@ def startup():
 app.include_router(email_router, prefix="/api")
 app.include_router(history_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
-app.include_router(recruiter_router, prefix="/api")
 
 
 @app.get("/")

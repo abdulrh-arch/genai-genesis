@@ -8,7 +8,6 @@ import AgentProgress, { AgentStep } from "@/components/AgentProgress";
 import EmailPreview from "@/components/EmailPreview";
 import { Suspense } from "react";
 import GmailConnect from "@/components/GmailConnect";
-import RecruiterFinder from "@/components/RecruiterFinder";
 
 // ----- Types -----
 interface FormData {
@@ -254,9 +253,6 @@ export default function DashboardPage() {
                   />
                 </div>
               </div>
-
-              {/* Recruiter finder */}
-              <RecruiterFinder onSelect={(email) => setFormData((f) => ({ ...f, recipientEmail: email }))} />
 
               {/* Recipient email */}
               <div>
