@@ -1,6 +1,4 @@
-# cold-email-agent
-
-Cold Email Agent
+# Cold Email Agent
 
 A multi-agent system built strictly for job hunters. Unlike standard LLM wrappers, the Cold Email Agent ensures that every outreach is factually grounded in the user's real portfolio and the recruiter's specific company context using job description and their resume. 
 
