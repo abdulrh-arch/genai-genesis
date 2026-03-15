@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MailForge — Zero-Hallucination Cold Email AI",
+  title: "Cold Email Agent — Let's get you hired",
   description:
     "AI-powered cold email orchestrator for tech internship hunters. Personalized, verified, and sent straight to your Gmail drafts.",
 };

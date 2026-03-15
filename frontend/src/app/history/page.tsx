@@ -65,7 +65,7 @@ export default function HistoryPage() {
             <div className="w-6 h-6 rounded-md bg-indigo-600 flex items-center justify-center">
               <Mail size={12} />
             </div>
-            <span className="font-semibold">MailForge</span>
+            <span className="font-semibold">Cold Email Agent</span>
           </div>
           <span className="text-white/20 text-sm ml-2">/ History</span>
 

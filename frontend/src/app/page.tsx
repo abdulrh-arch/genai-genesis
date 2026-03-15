@@ -49,7 +49,7 @@ export default function LandingPage() {
             <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-900/50">
               <Mail size={16} className="text-white" />
             </div>
-            <span className="font-semibold text-lg tracking-tight">MailForge</span>
+            <span className="font-semibold text-lg tracking-tight">Cold Email Agent</span>
           </div>
           <div className="flex items-center gap-3 fade-in">
             <Link href="/history" className="text-white/40 hover:text-white/70 transition-colors text-sm">
@@ -77,7 +77,7 @@ export default function LandingPage() {
         <div className="relative max-w-4xl mx-auto">
           <div className="fade-in-up inline-flex items-center gap-2 border border-indigo-500/30 bg-indigo-500/10 rounded-full px-4 py-1.5 text-sm text-indigo-300 mb-8">
             <Zap size={12} className="fill-indigo-400 text-indigo-400" />
-            Built for summer internship season
+            Let's get you hired
           </div>
 
           <h1 className="fade-in-up delay-100 text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight">
@@ -118,31 +118,6 @@ export default function LandingPage() {
           ))}
         </div>
       </div>
-
-      {/* Features */}
-      <section className="py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="fade-in-up text-3xl font-bold text-center mb-4">Every step, verified</h2>
-          <p className="fade-in-up delay-100 text-white/40 text-center mb-12 max-w-xl mx-auto">
-            Specialized agents work together to make sure nothing embarrassing slips through.
-          </p>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {features.map((f, i) => (
-              <div
-                key={f.title}
-                className="fade-in-up card-hover bg-white/[0.03] border border-white/8 rounded-2xl p-6 hover:bg-white/[0.06] hover:border-white/15 cursor-default"
-                style={{ animationDelay: `${i * 0.1}s`, opacity: 0 }}
-              >
-                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mb-4">
-                  {f.icon}
-                </div>
-                <h3 className="font-semibold mb-2">{f.title}</h3>
-                <p className="text-sm text-white/40 leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* How it works */}
       <section id="how-it-works" className="py-24 px-6 bg-white/[0.01]">
@@ -190,7 +165,7 @@ export default function LandingPage() {
           <div className="w-5 h-5 rounded bg-indigo-600/60 flex items-center justify-center">
             <Mail size={11} />
           </div>
-          <span className="font-medium text-white/40">MailForge</span>
+          <span className="font-medium text-white/40">Cold Email Agent</span>
         </div>
         <p>Built for internship hunters, by internship hunters.</p>
       </footer>
